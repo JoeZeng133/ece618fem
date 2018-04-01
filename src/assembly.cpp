@@ -138,6 +138,9 @@ void assembly(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
 	mat<double> a(numEm, 3), b(numEm, 3), c(numEm, 3);
 	mat<double> area(numEm, 1);
 
+	A.reserve(numEm * 9);
+	B.reserve(numEm * 9);
+
 	for (int e = 1; e <= numEm; ++e) {
 		node(1) = emArr(e, 1);
 		node(2) = emArr(e, 2);
@@ -157,8 +160,8 @@ void assembly(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
 
 		area(e) = 0.5 * (b(e, 1) * c(e, 2) - b(e, 2) * c(e, 1));
 
-		A.reserve(numEm * 9);
-		B.reserve(numEm * 9);
+		if (area(e) < 0) cout << "value < 0" << endl;
+
 
 		for (int i = 1; i <= 3; ++i)
 			for (int j = i; j <= 3; ++j) {

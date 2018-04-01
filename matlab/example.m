@@ -3,11 +3,12 @@ clc
 
 minx = 0;
 miny = 0;
-a = 1;
-b = 0.5;
+a = 1; %width
+b = 0.5; %height
 maxx = a;
 maxy = b;
 
+% generation of a rectangle 
 ns = [82;49;0];
 gd = [3;4;minx;minx;maxx;maxx;miny;maxy;maxy;miny];
 sf = 'R1';
@@ -15,14 +16,14 @@ dl = decsg(gd, sf, ns);
 
 model = createpde(1);
 geometryFromEdges(model, dl);
-mesh = generateMesh(model, 'Hmax', 0.02);
+mesh = generateMesh(model, 'Hmax', 0.02); %generate mesh with maximum element length 0.02
 
 xdata = mesh.Nodes(1, :);
 ydata = mesh.Nodes(2, :);
 tol = 1e-8 * a;
 
+%look for boundary nodes
 dirichlet = abs(xdata - 0) < tol | abs(xdata - a) < tol | abs(ydata - 0) < tol | abs(ydata - b) < tol;
-% dirichlet =  abs(xdata - 0) < tol & abs(ydata - 0) < tol;
 figure(1)
 
 pdeplot(model)
@@ -32,11 +33,8 @@ xlabel('x')
 ylabel('y')
 axis equal
 
-% prompt = 'Mesh OK?';
-% x = input(prompt);
-% if isempty(x)
 
-%%
+%% generate mesh.bin for assembler
 disp('Generating Mesh File');
 fileID = fopen('../output/mesh.bin', 'wb');
 if fileID == -1
@@ -46,19 +44,20 @@ if fileID == -1
     fileID = fopen('../output/mesh.bin', 'wb');
 end
 
-numNode = size(mesh.Nodes, 2);
-numEm = size(mesh.Elements, 2);
+numNode = size(mesh.Nodes, 2); %number of nodes
+numEm = size(mesh.Elements, 2); %number of elements
 
-fwrite(fileID, size(mesh.Nodes, 2), 'int');
-fwrite(fileID, mesh.Nodes, 'double');
-fwrite(fileID, size(mesh.Elements, 2), 'int');
-fwrite(fileID, mesh.Elements, 'int');
+fwrite(fileID, size(mesh.Nodes, 2), 'int'); 
+fwrite(fileID, mesh.Nodes, 'double'); %nodes coordinate 
+fwrite(fileID, size(mesh.Elements, 2), 'int'); 
+fwrite(fileID, mesh.Elements, 'int'); %element connection
 fclose(fileID);
 
+% run assembler
 cd ..
-!ece618.exe
+!ece618.exe 
 cd matlab
-%%
+%% read sparse matrix A and B
 fileID = fopen('../output/equation.bin', 'rb');
 if fileID == -1
     disp('Programm yet to be run');
@@ -79,8 +78,9 @@ B = sparse(Bi, Bj, Bv, numNode, numNode);
 fclose(fileID);
 
 %% TMz
+% solve generalized eigenvalue problem (A - lambda * B) * x = 0
 num_eigval = 4;
-[eigfunc, eigval] = eigs(A(~dirichlet, ~dirichlet), B(~dirichlet, ~dirichlet), num_eigval, 'sm');
+[eigfunc, eigval] = eigs(A(~dirichlet, ~dirichlet), B(~dirichlet, ~dirichlet), num_eigval, 'sm'); %impose dirichlet boundary
 V = zeros([numNode num_eigval]);
 V(~dirichlet, :) = eigfunc;
 
