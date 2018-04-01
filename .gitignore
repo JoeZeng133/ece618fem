@@ -1,5 +1,5 @@
-/build
-/output
+build
+output
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
