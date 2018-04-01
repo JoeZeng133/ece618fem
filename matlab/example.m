@@ -79,44 +79,56 @@ fclose(fileID);
 
 %% TMz
 % solve generalized eigenvalue problem (A - lambda * B) * x = 0
-num_eigval = 4;
-[eigfunc, eigval] = eigs(A(~dirichlet, ~dirichlet), B(~dirichlet, ~dirichlet), num_eigval, 'sm'); %impose dirichlet boundary
-V = zeros([numNode num_eigval]);
-V(~dirichlet, :) = eigfunc;
-
-
-V = fliplr(V);
-eigval = fliplr(eigval);
-modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
-modenum = 4;
-mode = V(:, modenum);
-modetrue =  modefunc(1, 2, mesh.Nodes(1,:), mesh.Nodes(2, :));
-
-figure(2)
-mode = mode / max(abs(mode(:)));
-pdeplot(model,'ZData', mode)
-xlabel('x')
-ylabel('y')
-title(['Mode ', num2str(modenum)])
-
+% sigma = 10;
+% Aminusdir = A(~dirichlet, ~dirichlet);
+% Bminusdir = B(~dirichlet, ~dirichlet);
+% [eigfunc, eigval] = eigs(Aminusdir, Bminusdir, sigma, 'sa'); %impose dirichlet boundary
+% eigval = diag(eigval);
+% 
+% V = zeros([numNode sigma]);
+% V(~dirichlet, :) = eigfunc;
+% 
+% modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
+% 
+% modetrue =  modefunc(1, 2, mesh.Nodes(1,:), mesh.Nodes(2, :));
+% 
+% figure(2)
+% for i = 1 : 9
+%     subplot(3,3,i)
+%     norm((Aminusdir - eigval(i) * Bminusdir) * eigfunc(:, i), inf) / norm(Aminusdir, inf)
+%     mode = V(:, i);
+%     mode = mode / max(abs(mode(:)));
+%     pdeplot(model,'XYData', mode)
+%     colormap jets
+%     xlabel('x')
+%     ylabel('y')
+%     title(['Mode ', num2str(i)])
+% end
 
 %% TEz
-num_eigval = 6;
-[eigfunc, eigval] = eigs(A, B, num_eigval, 'sm');
+num_eigval = 5;
+[R,p,s] = chol(B,'vector');
+clear opts
+opts.tol = eps;
+opts.cholB = true;
+opts.permB = s;
 
-V = fliplr(eigfunc);
-eigval = fliplr(eigval);
+[eigfunc, eigval, flag] = eigs(A, R, num_eigval, pi^2 * 5, opts);
+
+V = eigfunc;
+eigval = diag(eigval);
 modefunc = @(m, n, x, y) cos(m * pi * x / a) .* cos(n * pi * y / b);
-modenum = 5;
-mode = V(:, modenum + 1);
 mode1true =  modefunc(1, 1, mesh.Nodes(1,:), mesh.Nodes(2, :));
 
 figure(3)
-%normalize the functions
-span = max(mode(:)) - min(mode(:));
-mode = (mode - min(mode(:))) / span * 2 - 1;
-
-pdeplot(model,'ZData', mode)
-xlabel('x')
-ylabel('y')
-title(['Mode ', num2str(modenum)])
+for i = 1 : num_eigval
+    subplot(2,3,i)
+    
+    mode = V(:, i);
+    mode = (mode - min(mode)) / (max(mode) - min(mode)) * 2 - 1;
+    pdeplot(model,'XYData', mode)
+    colormap jet
+    xlabel('x')
+    ylabel('y')
+    title(['Mode ', num2str(i)])
+end

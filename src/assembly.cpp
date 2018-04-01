@@ -141,6 +141,8 @@ void assembly(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
 	A.reserve(numEm * 9);
 	B.reserve(numEm * 9);
 
+	double minarea = 1e6;
+
 	for (int e = 1; e <= numEm; ++e) {
 		node(1) = emArr(e, 1);
 		node(2) = emArr(e, 2);
@@ -158,10 +160,8 @@ void assembly(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
 		c(e, 2) = nodeArr(node(1), 1) - nodeArr(node(3), 1);
 		c(e, 3) = nodeArr(node(2), 1) - nodeArr(node(1), 1);
 
-		area(e) = 0.5 * (b(e, 1) * c(e, 2) - b(e, 2) * c(e, 1));
-
-		if (area(e) < 0) cout << "value < 0" << endl;
-
+		area(e) = abs(0.5 * (b(e, 1) * c(e, 2) - b(e, 2) * c(e, 1)));
+		minarea = min(area(e), minarea);
 
 		for (int i = 1; i <= 3; ++i)
 			for (int j = i; j <= 3; ++j) {
@@ -174,6 +174,8 @@ void assembly(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
 				if (i != j) B.push_back(node(j), node(i), tmp);
 			}
 	}
+
+	cout << "Minimal Area is " << minarea << endl;
 }
 
 
