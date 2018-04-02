@@ -16,7 +16,7 @@ dl = decsg(gd, sf, ns);
 
 model = createpde(1);
 geometryFromEdges(model, dl);
-mesh = generateMesh(model, 'Hmax', 0.02); %generate mesh with maximum element length 0.02
+mesh = generateMesh(model, 'Hmax', 0.04); %generate mesh with maximum element length 0.02
 
 xdata = mesh.Nodes(1, :);
 ydata = mesh.Nodes(2, :);
@@ -89,42 +89,43 @@ fclose(fileID);
 % V(~dirichlet, :) = eigfunc;
 % 
 % modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
-% 
-% modetrue =  modefunc(1, 2, mesh.Nodes(1,:), mesh.Nodes(2, :));
-% 
+% mode5 =  modefunc(4, 1, mesh.Nodes(1,:), mesh.Nodes(2, :))';
+% mode6 =  modefunc(2, 2, mesh.Nodes(1,:), mesh.Nodes(2, :))';
+%  
 % figure(2)
 % for i = 1 : 9
 %     subplot(3,3,i)
-%     norm((Aminusdir - eigval(i) * Bminusdir) * eigfunc(:, i), inf) / norm(Aminusdir, inf)
 %     mode = V(:, i);
 %     mode = mode / max(abs(mode(:)));
 %     pdeplot(model,'XYData', mode)
-%     colormap jets
+%     colormap jet
 %     xlabel('x')
 %     ylabel('y')
-%     title(['Mode ', num2str(i)])
+%     title(['k= ', num2str(eigval(i))])
 % end
 
 %% TEz
-num_eigval = 5;
+num_eigval = 6;
 [R,p,s] = chol(B,'vector');
 clear opts
-opts.tol = eps;
+opts.tol = 1e-5;
 opts.cholB = true;
 opts.permB = s;
 
-[eigfunc, eigval, flag] = eigs(A, R, num_eigval, pi^2 * 5, opts);
+[eigfunc, eigval, flag] = eigs(A, R, num_eigval, 'sa', opts);
 
 V = eigfunc;
 eigval = diag(eigval);
 modefunc = @(m, n, x, y) cos(m * pi * x / a) .* cos(n * pi * y / b);
-mode1true =  modefunc(1, 1, mesh.Nodes(1,:), mesh.Nodes(2, :));
+
+mode2 =  modefunc(2, 0, mesh.Nodes(1,:), mesh.Nodes(2, :))';
+mode3 =  modefunc(0, 1, mesh.Nodes(1,:), mesh.Nodes(2, :))';
 
 figure(3)
-for i = 1 : num_eigval
+for i = 1 : num_eigval - 1
     subplot(2,3,i)
     
-    mode = V(:, i);
+    mode = V(:, i + 1);
     mode = (mode - min(mode)) / (max(mode) - min(mode)) * 2 - 1;
     pdeplot(model,'XYData', mode)
     colormap jet
