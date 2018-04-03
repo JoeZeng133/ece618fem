@@ -16,7 +16,7 @@ dl = decsg(gd, sf, ns);
 
 model = createpde(1);
 geometryFromEdges(model, dl);
-mesh = generateMesh(model, 'Hmax', 0.04); %generate mesh with maximum element length 0.02
+mesh = generateMesh(model, 'Hmax', 0.04, 'GeometricOrder', 'linear'); %generate mesh with maximum element length 0.02
 
 xdata = mesh.Nodes(1, :);
 ydata = mesh.Nodes(2, :);
@@ -79,40 +79,38 @@ fclose(fileID);
 
 %% TMz
 % solve generalized eigenvalue problem (A - lambda * B) * x = 0
-% sigma = 10;
-% Aminusdir = A(~dirichlet, ~dirichlet);
-% Bminusdir = B(~dirichlet, ~dirichlet);
-% [eigfunc, eigval] = eigs(Aminusdir, Bminusdir, sigma, 'sa'); %impose dirichlet boundary
-% eigval = diag(eigval);
-% 
-% V = zeros([numNode sigma]);
-% V(~dirichlet, :) = eigfunc;
-% 
-% modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
-% mode5 =  modefunc(4, 1, mesh.Nodes(1,:), mesh.Nodes(2, :))';
-% mode6 =  modefunc(2, 2, mesh.Nodes(1,:), mesh.Nodes(2, :))';
-%  
-% figure(2)
-% for i = 1 : 9
-%     subplot(3,3,i)
-%     mode = V(:, i);
-%     mode = mode / max(abs(mode(:)));
-%     pdeplot(model,'XYData', mode)
-%     colormap jet
-%     xlabel('x')
-%     ylabel('y')
-%     title(['k= ', num2str(eigval(i))])
-% end
+sigma = 10;
+Aminusdir = A(~dirichlet, ~dirichlet);
+Bminusdir = B(~dirichlet, ~dirichlet);
+
+[eigfunc, eigval] = eigs(Aminusdir, Bminusdir, sigma, 'smallestreal'); %impose dirichlet boundary
+eigval = diag(eigval);
+
+V = zeros([numNode sigma]);
+V(~dirichlet, :) = eigfunc;
+
+modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
+mode5 =  modefunc(4, 1, mesh.Nodes(1,:), mesh.Nodes(2, :))';
+mode6 =  modefunc(2, 2, mesh.Nodes(1,:), mesh.Nodes(2, :))';
+ 
+figure(2)
+title('TM Mode')
+for i = 1 : 9
+    subplot(3,3,i)
+    mode = V(:, i);
+    mode = mode / max(abs(mode(:)));
+    pdeplot(model,'XYData', mode)
+    colormap jet
+    xlabel('x')
+    ylabel('y')
+    title(['TM k= ', num2str(eigval(i))])
+end
 
 %% TEz
 num_eigval = 6;
 [R,p,s] = chol(B,'vector');
-clear opts
-opts.tol = 1e-5;
-opts.cholB = true;
-opts.permB = s;
 
-[eigfunc, eigval, flag] = eigs(A, R, num_eigval, 'sa', opts);
+[eigfunc, eigval, flag] = eigs(A,R,6,'smallestreal','IsCholesky',true,'CholeskyPermutation',s);
 
 V = eigfunc;
 eigval = diag(eigval);
@@ -122,6 +120,7 @@ mode2 =  modefunc(2, 0, mesh.Nodes(1,:), mesh.Nodes(2, :))';
 mode3 =  modefunc(0, 1, mesh.Nodes(1,:), mesh.Nodes(2, :))';
 
 figure(3)
+title('TE Mode')
 for i = 1 : num_eigval - 1
     subplot(2,3,i)
     
@@ -131,5 +130,5 @@ for i = 1 : num_eigval - 1
     colormap jet
     xlabel('x')
     ylabel('y')
-    title(['Mode ', num2str(i)])
+    title(['TE k =  ', num2str(eigval(i + 1))])
 end
