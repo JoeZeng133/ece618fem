@@ -4,7 +4,9 @@
 #include <string>
 #include "windows.h"
 
+//#define LINEAR
 #define dirac(i, j) ((i == j)? 1 : 0)
+#define SQR(x) ((x) * (x))
 using namespace std;
 
 template<typename T>
@@ -64,23 +66,30 @@ public:
 	}
 };
 
-void assembly(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B);
+void assemblylinear(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B);
 void read(mat<double>& nodeArr, mat<int>& emArr);
 void output(sparse& A, sparse& B);
+void assemblyquad(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B);
 
 int main() {
 	mat<double> nodeArr;
 	mat<int> emArr;
 	sparse A, B;
 
-#if _DEBUG
+#ifdef _DEBUG
 	char buffer[MAX_PATH];
 	GetModuleFileName(NULL, buffer, MAX_PATH);
 	cout << "Current Directory is " << buffer << endl;  
 #endif // _DEBUG
 
 	read(nodeArr, emArr);
-	assembly(nodeArr, emArr, A, B);
+
+#ifdef LINEAR
+	assemblylinear(nodeArr, emArr, A, B);
+#else
+	assemblyquad(nodeArr, emArr, A, B);
+#endif // _LINEAR
+	
 	output(A, B);
 }
 
@@ -100,9 +109,15 @@ void read(mat<double>& nodeArr, mat<int>& emArr) {
 	file.read((char*)nodeArr.data(), numNode * 2 * sizeof(double));
 
 	file.read((char*)&numEm, sizeof(int));
+
+#ifdef LINEAR
 	emArr.zeros(numEm, 3);
 	file.read((char*)emArr.data(), numEm * 3 * sizeof(int));
-
+#else
+	emArr.zeros(numEm, 6);
+	file.read((char*)emArr.data(), numEm * 6 * sizeof(int));
+#endif
+	
 	file.close();
 }
 
@@ -130,7 +145,94 @@ void output(sparse& A, sparse& B) {
 	file.close();
 }
 
-void assembly(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
+void assemblyquad(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
+	const int Bl_const[6][6] = { 
+		{  6, -1, -1,  0, -4,  0},
+		{ -1,  6, -1,  0,  0, -4},
+		{ -1, -1,  6, -4,  0,  0},
+		{  0,  0, -4, 32, 16, 16},
+		{ -4,  0,  0, 16, 32, 16},
+		{  0, -4,  0, 16, 16, 32}
+	};
+
+	int numNode = nodeArr.size(1);
+	int numEm = emArr.size(1);
+
+	mat<int> node(6, 1);
+	mat<double> a(numEm, 3), b(numEm, 3), c(numEm, 3);
+	mat<double> area(numEm, 1);
+	mat<double> Al(6, 6);
+
+	A.reserve(numEm * 36);
+	B.reserve(numEm * 36);
+
+	double minarea = 1e6;
+
+	for (int e = 1; e <= numEm; ++e) {
+		for (int i = 1; i <= 6; ++i) {
+			node(i) = emArr(e, i);
+		}
+
+		a(e, 1) = nodeArr(node(2), 1) * nodeArr(node(3), 2) - nodeArr(node(2), 2) * nodeArr(node(3), 1);
+		a(e, 2) = nodeArr(node(3), 1) * nodeArr(node(1), 2) - nodeArr(node(3), 2) * nodeArr(node(1), 1);
+		a(e, 3) = nodeArr(node(1), 1) * nodeArr(node(2), 2) - nodeArr(node(1), 2) * nodeArr(node(2), 1);
+
+		b(e, 1) = nodeArr(node(2), 2) - nodeArr(node(3), 2);
+		b(e, 2) = nodeArr(node(3), 2) - nodeArr(node(1), 2);
+		b(e, 3) = nodeArr(node(1), 2) - nodeArr(node(2), 2);
+
+		c(e, 1) = nodeArr(node(3), 1) - nodeArr(node(2), 1);
+		c(e, 2) = nodeArr(node(1), 1) - nodeArr(node(3), 1);
+		c(e, 3) = nodeArr(node(2), 1) - nodeArr(node(1), 1);
+
+		area(e) = abs(0.5 * (b(e, 1) * c(e, 2) - b(e, 2) * c(e, 1)));
+		minarea = min(area(e), minarea);
+
+		for (int i = 1; i <= 3; ++i)
+			for (int j = i; j <= 3; ++j) {
+				Al(i, j) = (4.0 * dirac(i, j) - 1) / 12 / area(e) * (b(e, i) * b(e, j) + c(e, i) * c(e, j));
+			}
+			
+		Al(1, 4) = Al(2, 4) = -4 * Al(1, 2);
+		Al(1, 6) = Al(3, 6) = -4 * Al(1, 3);
+		Al(2, 5) = Al(3, 5) = -4 * Al(2, 3);
+		Al(1, 5) = Al(2, 6) = Al(3, 4) = 0;
+
+		Al(4, 4) = 2.0 / 3.0 / area(e) * (SQR(b(e, 1)) + b(e, 1) * b(e, 2) + SQR(b(e, 2)) + 
+										  SQR(c(e, 1)) + c(e, 1) * c(e, 2) + SQR(c(e, 2)));
+
+		Al(5, 5) = 2.0 / 3.0 / area(e) * (SQR(b(e, 2)) + b(e, 2) * b(e, 3) + SQR(b(e, 3)) + 
+										  SQR(c(e, 2)) + c(e, 2) * c(e, 3) + SQR(c(e, 3)));
+
+		Al(6, 6) = 2.0 / 3.0 / area(e) * (SQR(b(e, 3)) + b(e, 3) * b(e, 1) + SQR(b(e, 1)) + 
+										  SQR(c(e, 3)) + c(e, 3) * c(e, 1) + SQR(c(e, 1)));
+
+		Al(4, 5) = 1.0 / 3.0 / area(e) * (b(e, 2) * b(e, 3) + 2 * b(e, 1) * b(e, 3) + b(e, 1) * b(e, 2) + SQR(b(e, 2)) + 
+										  c(e, 2) * c(e, 3) + 2 * c(e, 1) * c(e, 3) + c(e, 1) * c(e, 2) + SQR(c(e, 2)));
+		
+		Al(4, 6) = 1.0 / 3.0 / area(e) * (b(e, 1) * b(e, 3) + 2 * b(e, 2) * b(e, 3) + b(e, 1) * b(e, 2) + SQR(b(e, 1)) + 
+										  c(e, 1) * c(e, 3) + 2 * c(e, 2) * c(e, 3) + c(e, 1) * c(e, 2) + SQR(c(e, 1)));
+		
+		Al(5, 6) = 1.0 / 3.0 / area(e) * (b(e, 3) * b(e, 1) + 2 * b(e, 2) * b(e, 1) + b(e, 2) * b(e, 3) + SQR(b(e, 3)) + 
+										  c(e, 3) * c(e, 1) + 2 * c(e, 2) * c(e, 1) + c(e, 2) * c(e, 3) + SQR(c(e, 3)));
+
+		for (int i = 1; i <= 6; ++i)
+			for (int j = i; j <= 6; ++j) {
+				A.push_back(node(i), node(j), Al(i, j));
+				B.push_back(node(i), node(j), Bl_const[i - 1][j - 1] * area(e) / 180.0);
+
+				if (i != j) {
+					A.push_back(node(j), node(i), Al(i, j));
+					B.push_back(node(j), node(i), Bl_const[i - 1][j - 1] * area(e) / 180.0);
+				}
+			}
+	}
+
+	cout << "Minimal Area is " << minarea << endl;
+	
+}
+
+void assemblylinear(mat<double>& nodeArr, mat<int>& emArr, sparse& A, sparse& B) {
 	int numNode = nodeArr.size(1);
 	int numEm = emArr.size(1);
 
