@@ -16,7 +16,7 @@ dl = decsg(gd, sf, ns);
 
 model = createpde(1);
 geometryFromEdges(model, dl);
-mesh = generateMesh(model, 'Hmax', 0.04, 'GeometricOrder', 'linear'); %generate mesh with maximum element length 0.02
+mesh = generateMesh(model, 'Hmax', 0.05, 'GeometricOrder', 'quadratic');
 
 xdata = mesh.Nodes(1, :);
 ydata = mesh.Nodes(2, :);
@@ -55,7 +55,7 @@ fclose(fileID);
 
 % run assembler
 cd ..
-!ece618.exe 
+!quad.exe 
 cd matlab
 %% read sparse matrix A and B
 fileID = fopen('../output/equation.bin', 'rb');
@@ -78,12 +78,11 @@ B = sparse(Bi, Bj, Bv, numNode, numNode);
 fclose(fileID);
 
 %% TMz
-% solve generalized eigenvalue problem (A - lambda * B) * x = 0
 sigma = 10;
 Aminusdir = A(~dirichlet, ~dirichlet);
 Bminusdir = B(~dirichlet, ~dirichlet);
 
-[eigfunc, eigval] = eigs(Aminusdir, Bminusdir, sigma, 'smallestreal'); %impose dirichlet boundary
+[eigfunc, eigval] = eigs(Aminusdir, Bminusdir, sigma, 'SA'); %impose dirichlet boundary
 eigval = diag(eigval);
 
 V = zeros([numNode sigma]);
@@ -101,6 +100,8 @@ for i = 1 : 9
     mode = mode / max(abs(mode(:)));
     pdeplot(model,'XYData', mode)
     colormap jet
+    axis equal
+    axis([0 a 0 b])
     xlabel('x')
     ylabel('y')
     title(['TM k= ', num2str(eigval(i))])
@@ -108,9 +109,9 @@ end
 
 %% TEz
 num_eigval = 6;
-[R,p,s] = chol(B,'vector');
+[eigfunc, eigval, flag] = eigs(A,B,num_eigval,'sa');
 
-[eigfunc, eigval, flag] = eigs(A,R,6,'smallestreal','IsCholesky',true,'CholeskyPermutation',s);
+% [eigfunc, eigval, flag] = eigs(A,R,6,'SA','IsCholesky',true,'CholeskyPermutation',s);
 
 V = eigfunc;
 eigval = diag(eigval);
@@ -128,6 +129,8 @@ for i = 1 : num_eigval - 1
     mode = (mode - min(mode)) / (max(mode) - min(mode)) * 2 - 1;
     pdeplot(model,'XYData', mode)
     colormap jet
+    axis equal
+    axis([0 a 0 b])
     xlabel('x')
     ylabel('y')
     title(['TE k =  ', num2str(eigval(i + 1))])
