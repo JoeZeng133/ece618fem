@@ -79,13 +79,12 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-    x = get(handles.edit1,'String'); %edit1 being Tag of ur edit box
+    x = char(get(handles.edit1,'String')); %edit1 being Tag of ur edit box
     a = str2double(x);
-    y = get(handles.edit2,'String'); %edit1 being Tag of ur edit box
+    y = char(get(handles.edit2,'String')); %edit1 being Tag of ur edit box
     b = str2double(y);
     
     flag=get(handles.checkbox1,'Value');
-%     ax1 = handles.axes1;
     
     for i = 1:10
         axar(i) = handles.(['axes',num2str(i)]);
@@ -101,7 +100,9 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
+    for i = 1:10
+        cla(handles.(['axes',num2str(i)]),'reset');
+    end
 
 function edit1_Callback(hObject, eventdata, handles)
 % hObject    handle to edit1 (see GCBO)
