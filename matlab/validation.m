@@ -1,11 +1,11 @@
-%% FEM Validation 
+%% FEM Validation %% 
 
 function validation(a, b, model, mesh)
 
-% if (a-b*2>0.0000001)
-%     disp('a=2*b condition not satisfied!');
-%     return;
-% end
+if (a-b*2>0.0000001)
+     disp('a=2*b condition not satisfied!');
+     return;
+end
 
 modefunc_tm = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
 modefunc_te = @(m, n, x, y) cos(m * pi * x / a) .* cos(n * pi * y / b);
