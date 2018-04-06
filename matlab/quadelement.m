@@ -1,4 +1,4 @@
-function [] = example(a, b, axar)
+function [] = example(a, b, axar, val_flag)
 %clear
 %clc
 

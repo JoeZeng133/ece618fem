@@ -22,7 +22,7 @@ function varargout = GUIDE(varargin)
 
 % Edit the above text to modify the response to help GUIDE
 
-% Last Modified by GUIDE v2.5 05-Apr-2018 16:30:49
+% Last Modified by GUIDE v2.5 06-Apr-2018 14:28:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,13 +84,14 @@ function pushbutton1_Callback(hObject, eventdata, handles)
     y = get(handles.edit2,'String'); %edit1 being Tag of ur edit box
     b = str2double(y);
     
+    flag=get(handles.checkbox1,'Value');
 %     ax1 = handles.axes1;
     
     for i = 1:10
         axar(i) = handles.(['axes',num2str(i)]);
     end
     
-    linearelement(a, b, axar);
+    linearelement(a, b, axar, flag);
     
 
 
@@ -145,3 +146,12 @@ function edit2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in checkbox1.
+function checkbox1_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox1

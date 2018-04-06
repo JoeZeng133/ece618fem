@@ -1,4 +1,4 @@
-function [] = linearelement(a, b, axar);
+function [] = linearelement(a, b, axar, val_flag);
 % clear
 % clc
 
@@ -161,4 +161,10 @@ for i = 1 : 5
     xlabel('x')
     ylabel('y')
     title(['TE k =  ', num2str(eigval(i + 1))])
+end
+
+if (val_flag==1)
+validation(a,b, model, mesh);
+end
+
 end
