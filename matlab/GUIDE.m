@@ -90,7 +90,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
         axar(i) = handles.(['axes',num2str(i)]);
     end
     
-    linearelement(a, b, axar, flag);
+    calculate(a, b, axar, flag);
     
 
 
