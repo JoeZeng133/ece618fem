@@ -1,9 +1,9 @@
-function [] = calculate(a, b, axar, val_flag)
+function [] = calculate(a, b, order, em_size, axar, axmesh, val_flag)
 % clear
 % clc
 
-order = 2;
-em_size = 0.1;
+%order = 2;
+% em_size = 0.1;
 
 minx = 0;
 miny = 0;
@@ -36,12 +36,13 @@ tol = 1e-8 * a;
 dirichlet = abs(xdata - 0) < tol | abs(xdata - a) < tol | abs(ydata - 0) < tol | abs(ydata - b) < tol;
 
 % figure(1)
-% pdeplot(model)
-% hold on
-% plot(mesh.Nodes(1,dirichlet),mesh.Nodes(2,dirichlet),'or','MarkerFaceColor','g')
-% xlabel('x')
-% ylabel('y')
-% axis equal
+axes(axmesh)
+pdeplot(model)
+hold on
+plot(mesh.Nodes(1,dirichlet),mesh.Nodes(2,dirichlet),'or','MarkerFaceColor','g')
+xlabel('x')
+ylabel('y')
+axis equal
 
 
 %% generate mesh.bin for assembler
