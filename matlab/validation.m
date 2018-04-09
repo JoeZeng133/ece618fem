@@ -15,21 +15,22 @@ set(gcf,'Position',[200 200 1000 500]);
 %Calculate the first few modes for TE and TM cases with specified a and b 
 for i=1:6
     for j=1:6
-       fc_mode_te_2d_arr_te(i,j)=((i-1)/a)^2+((j-1)/b)^2;
+       fc_mode_te_2d_arr(i,j)=((j-1)/a)^2+((i-1)/b)^2;
     end
 end
 
-fc_mode_te_1d_arr=reshape(fc_mode_te_2d_arr,[6,6]);
-[fc_mode_te_1d_arr_sort, te_mode_index]=sort(fc_mode_1d_arr);
-fc_mode_tm_2d_arr=fc_mode_tm_2d_arr(2:6,2:6);
-fc_mode_tm_1d_arr=reshape(fc_mode_tm_2d_arr,[5,5]);
+fc_mode_te_1d_arr=reshape(fc_mode_te_2d_arr,[1,36]);
+[fc_mode_te_1d_arr_sort, te_mode_index]=sort(fc_mode_te_1d_arr);
+
+fc_mode_tm_2d_arr=fc_mode_te_2d_arr(2:6,2:6);
+fc_mode_tm_1d_arr=reshape(fc_mode_tm_2d_arr,[1,25]);
 [fc_mode_tm_1d_arr_sort, tm_mode_index]=sort(fc_mode_tm_1d_arr);
 
-tm_mode_arr(:,1)=floor(tm_mode_index/6);
-tm_mode_arr(:,2)=mod(tm_mode_index,6);
-te_mode_arr(:,1)=floor(te_mode_index/6);
-te_mode_arr(:,2)=mod(te_mode_index,6);
-
+tm_mode_arr(:,1)=ceil(tm_mode_index/5);
+tm_mode_arr(:,2)=mod(tm_mode_index-1,5)+1;
+te_mode_arr(:,1)=floor((te_mode_index-1)/6);
+te_mode_arr(:,2)=mod(te_mode_index-1,6);
+te_mode_arr=te_mode_arr(2:end,:);
 
 %In the case of a/b=2, the first five TM modes are
 %TM mode1 1,1
