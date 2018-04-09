@@ -1,4 +1,4 @@
-function [] = calculate(a, b, order, em_size, axar, axmesh, val_flag)
+function [model, mesh, V_tm, V_te] = calculate(a, b, order, em_size, axar, axmesh, val_flag)
 % clear
 % clc
 
@@ -127,6 +127,7 @@ for i = 1 : 5
     axes(axar(i))
     mode = V(:, i);
     mode = mode / max(abs(mode(:)));
+    V_tm(:,i)=mode;
     pdeplot(model,'XYData', mode)
     colormap jet
     xlabel('x')
@@ -167,6 +168,7 @@ for i = 1 : 5
     
     mode = V(:, i + 1);
     mode = (mode - min(mode)) / (max(mode) - min(mode)) * 2 - 1;
+    V_te(:,i)=mode;
     pdeplot(model,'XYData', mode)
     colormap jet
     xlabel('x')
@@ -174,8 +176,5 @@ for i = 1 : 5
     title(['TE k =  ', num2str(eigval(i + 1))])
 end
 
-if (val_flag==1)
-validation(a,b, model, mesh);
-end
 
 end

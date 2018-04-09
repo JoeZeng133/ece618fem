@@ -87,6 +87,7 @@ Bi = fread(fileID, numEqs, 'int');
 Bj = fread(fileID, numEqs, 'int');
 Bv = fread(fileID, numEqs, 'double');
 
+
 A = sparse(Ai, Aj, Av, numNode, numNode);
 B = sparse(Bi, Bj, Bv, numNode, numNode);
 fclose(fileID);
@@ -103,7 +104,7 @@ eigval = diag(eigval);
 V = zeros([numNode num_eig]);
 V(~dirichlet, :) = eigfunc;
 
-modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
+% modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
 % mode5 =  modefunc(4, 1, mesh.Nodes(1,:), mesh.Nodes(2, :))';
 % mode6 =  modefunc(2, 2, mesh.Nodes(1,:), mesh.Nodes(2, :))';
  

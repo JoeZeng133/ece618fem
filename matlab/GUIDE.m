@@ -87,7 +87,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
     em_size = str2double(z);
     meshorder = get(handles.popupmenu1,'Value'); %mesh order
     
-    flag=get(handles.checkbox1,'Value');
+    val_flag=get(handles.checkbox1,'Value');
     
     for i = 1:10
         axar(i) = handles.(['axes',num2str(i)]);
@@ -95,9 +95,13 @@ function pushbutton1_Callback(hObject, eventdata, handles)
     
     axmesh = handles.axes11;
     
-    calculate(a, b, meshorder, em_size, axar, axmesh, flag);
+    [model, mesh, V_tm, V_te] = calculate(a, b, meshorder, em_size, axar, axmesh, flag);
     
+    err_flag=0;
 
+    if (val_flag==1)|| (err_flag==1)
+       validation(a,b, model, mesh, V_tm, V_te, val_flag, err_flag);
+    end
 
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
