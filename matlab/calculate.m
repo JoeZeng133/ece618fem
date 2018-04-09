@@ -37,9 +37,8 @@ dirichlet = abs(xdata - 0) < tol | abs(xdata - a) < tol | abs(ydata - 0) < tol |
 
 % figure(1)
 axes(axmesh)
-pdeplot(model)
-hold on
-plot(mesh.Nodes(1,dirichlet),mesh.Nodes(2,dirichlet),'or','MarkerFaceColor','g')
+pdeplot(model), hold on
+plot(mesh.Nodes(1,dirichlet),mesh.Nodes(2,dirichlet),'or','MarkerFaceColor','g'), hold off
 xlabel('x')
 ylabel('y')
 axis equal
