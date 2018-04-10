@@ -87,6 +87,7 @@ Bi = fread(fileID, numEqs, 'int');
 Bj = fread(fileID, numEqs, 'int');
 Bv = fread(fileID, numEqs, 'double');
 
+
 A = sparse(Ai, Aj, Av, numNode, numNode);
 B = sparse(Bi, Bj, Bv, numNode, numNode);
 fclose(fileID);
@@ -140,6 +141,36 @@ fclose(fileID);
 % disp(['The number of mesh is', num2str(em_size)])
 % fprintf('%.3e ', error)
 % fprintf('\n')
+=======
+% solve generalized eigenvalue problem (A - lambda * B) * x = 0
+num_eig = 6;
+Aminusdir = A(~dirichlet, ~dirichlet);
+Bminusdir = B(~dirichlet, ~dirichlet);
+
+[eigfunc, eigval] = eigs(Aminusdir, Bminusdir, num_eig , 'SA'); %impose dirichlet boundary
+eigval = diag(eigval);
+
+V = zeros([numNode num_eig]);
+V(~dirichlet, :) = eigfunc;
+
+% modefunc = @(m, n, x, y) sin(m * pi * x / a) .* sin(n * pi * y / b);
+% mode5 =  modefunc(4, 1, mesh.Nodes(1,:), mesh.Nodes(2, :))';
+% mode6 =  modefunc(2, 2, mesh.Nodes(1,:), mesh.Nodes(2, :))';
+ 
+figure(2)
+title('TM Mode')
+for i = 1 : num_eig
+    subplot(2, 3,i)
+    mode = V(:, i);
+    mode = mode / max(abs(mode(:)));
+    pdeplot(model,'XYData', mode)
+    colormap jet
+    xlabel('x')
+    ylabel('y')
+    axis equal
+    axis([0 a 0 b])
+    title(['TM k= ', num2str(eigval(i))])
+end
 
 
 %% TEz
